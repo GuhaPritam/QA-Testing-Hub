@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mobile App Testing Checklist</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; max-width:900px; margin:30px auto; padding:0 20px; }
+    h1 { text-align:center; }
+    h2, h3 { margin-top: 24px; }
+    ul { list-style:none; padding:0; }
+    li { display:flex; align-items:center; padding:6px 0; border-bottom:1px solid #eee; }
+    input[type="checkbox"] { width:18px; height:18px; margin-right:12px; }
+    .meta { margin-top:16px; color:#555; font-size:0.9rem; }
+    button { margin-top:16px; padding:8px 12px; }
+  </style>
+</head>
+<body>
+  <h1>Mobile App Testing</h1>
+  <h2>2. Mobile App Testing Coverage Checklist</h2>
+  <div id="checklist"></div>
+
+  <div class="meta">
+    <button id="clear">Clear all</button>
+    <span style="margin-left:12px">Status saved locally in your browser.</span>
+  </div>
+
+  <script>
+    const checklistData = {
+      "Functional Testing": [
+        "App installation, launch, and first-time run flow",
+        "Login/Signup/Forget Password (Email, Social, OTP, etc.)",
+        "Navigation between screens (tabs, menus, back button, etc.)",
+        "Form validation (input fields, mandatory checks)",
+        "Core features (upload, search, filter, notifications, etc.)",
+        "Logout & session expiry"
+      ],
+      "UI/UX Testing": [
+        "Screen resolution & responsiveness (small, medium, large devices)",
+        "Text alignment, font, color consistency",
+        "Button sizes & clickable areas (touch-friendly)",
+        "Dark mode / light mode support (if applicable)",
+        "Accessibility (large fonts, contrast etc.)"
+      ],
+      "Performance Testing": [
+        "App launch time",
+        "API response time",
+        "Memory usage / CPU usage",
+        "App behavior in low network / no network",
+        "Battery consumption"
+      ],
+      "Compatibility Testing": [
+        "Android versions (e.g., 10, 11, 12, 13)",
+        "iOS versions (latest + 2 older versions)",
+        "Different devices (Samsung, OnePlus, iPhone, iPad, etc.)"
+      ],
+      "Network Testing": [
+        "2G/3G/4G/5G/WiFi switching",
+        "Offline mode handling",
+        "Error handling for no internet"
+      ],
+      "Security Testing": [
+        "Secure login (no plain text password storage)",
+        "Data encryption (API requests/response)",
+        "Session timeout & re-login requirement",
+        "No sensitive data cached locally"
+      ],
+      "Regression & Smoke Testing": [
+        "Run sanity after every build",
+        "Regression suite before release"
+      ],
+      "App Store Readiness": [
+        "Proper crash handling",
+        "Compliance with Play Store & App Store guidelines"
+      ]
+    };
+
+    const STORAGE_KEY = 'mobile-checklist-structured-v1';
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    const container = document.getElementById('checklist');
+
+    Object.keys(checklistData).forEach(section => {
+      const h3 = document.createElement('h3');
+      h3.textContent = section;
+      container.appendChild(h3);
+
+      const ul = document.createElement('ul');
+
+      checklistData[section].forEach((item, idx) => {
+        const li = document.createElement('li');
+        const cb = document.createElement('input');
+        const uniqueId = section + '-' + idx;
+        cb.type = 'checkbox';
+        cb.id = uniqueId;
+        cb.checked = !!saved[uniqueId];
+        cb.addEventListener('change', () => {
+          saved[uniqueId] = cb.checked;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+        });
+        const label = document.createElement('label');
+        label.htmlFor = cb.id;
+        label.textContent = item;
+        li.appendChild(cb);
+        li.appendChild(label);
+        ul.appendChild(li);
+      });
+
+      container.appendChild(ul);
+    });
+
+    document.getElementById('clear').addEventListener('click', () => {
+      if (!confirm('Clear all checks?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    });
+  </script>
+</body>
+</html>
