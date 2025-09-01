@@ -75,31 +75,48 @@
         "Navigation between screens (tabs, menus, back button, etc.)",
         "Form validation (input fields, mandatory checks)",
         "Core features (upload, search, filter, notifications, etc.)",
-        "Logout & session expiry"
+        "Logout & session expiry",
+        "Multi-language/localization support (if available) (Verify translations and layout adjustments for multiple languages)",
+        "Background tasks completion (upload/download in background) (Verify tasks continue after minimizing app)",
+        "Deep linking & universal links (Verify links open correct app screens)",
+        "Push notifications (foreground, background, and killed states – when the app isn’trunning)",
+        "App permissions (camera, location, contacts, storage, notifications)",
+        "Multi-language/localization support (if available)"
       ],
       "UI/UX Testing": [
         "Screen resolution & responsiveness (small, medium, large devices)",
         "Text alignment, font, color consistency",
         "Button sizes & clickable areas (touch-friendly)",
         "Dark mode / light mode support (if applicable)",
-        "Accessibility (large fonts, contrast etc.)"
+        "Accessibility (large fonts, contrast etc.)",
+        "Orientation changes (portrait ↔ landscape transitions) (Ensure layout remains intact during rotation)",
+        "Animations & transitions smoothness (Check if transitions are smooth and not laggy)",
+        "Keyboard overlap check (Ensure keyboard doesn’t hide inputs)"
       ],
       "Performance Testing": [
         "App launch time",
         "API response time",
         "Memory usage / CPU usage",
         "App behavior in low network / no network",
-        "Battery consumption"
+        "Battery consumption",
+        "Crash recovery (Verify app restores properly after crash or force close)",
+        "App stability during long usage sessions",
+        "Concurrent user handling (if applicable, e.g., chat, multiplayer) - Ensure the app can handle multiple users simultaneously without failure."
       ],
       "Compatibility Testing": [
         "Android versions (e.g., 10, 11, 12, 13)",
         "iOS versions (latest + 2 older versions)",
-        "Different devices (Samsung, OnePlus, iPhone, iPad, etc.)"
+        "Different devices (Samsung, OnePlus, iPhone, iPad, etc.)",
+        "External devices (Bluetooth headphones, smartwatches, car play, etc.)"
       ],
       "Network Testing": [
         "2G/3G/4G/5G/WiFi switching",
         "Offline mode handling",
-        "Error handling for no internet"
+        "Error handling for no internet",
+        "Airplane mode handling (Verify app behavior)",
+        "Proxy/VPN impact on app connectivity",
+        "Roaming network handling (Ensure app handles roaming data correctly)",
+        "Background sync on reconnect (Ensure data sync resumes correctly when connectivity is restored.)"
       ],
       "Security Testing": [
         "Secure login (no plain text password storage)",
@@ -110,6 +127,7 @@
       "Interruptions & Background Events": [
         "Incoming calls, messages, or notifications during app use",
         "App switching (foreground ↔ background)",
+        "Low storage condition handling (Test app behavior when storage is full)",
         "App restart after being killed from background"
       ],
       "Environment & Device State Testing": [
@@ -123,6 +141,7 @@
       ],
       "Regression & Smoke Testing": [
         "Run sanity after every build",
+        "Backward compatibility checks after updates (Ensure updates do not break older user setups.)",
         "Regression suite before release"
       ],
       "App Store Readiness": [
