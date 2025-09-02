@@ -1,0 +1,5 @@
+{
+  "redirects": [
+    { "source": "/", "destination": "/checklist_updated.html", "permanent": true }
+  ]
+}
