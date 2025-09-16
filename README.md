@@ -1,5 +1,5 @@
 ### 1. Clone the Repository
-````markdown
+```markdown
 git clone git@github.com:GuhaPritam/QA-Testing-Hub.git
 cd QA-Testing-Hub
 ````
@@ -38,9 +38,17 @@ Install all dependencies from `requirements.txt`:
 pip install -r requirements.txt
 ```
 
+Or, if you want to **generate/update** `requirements.txt` from your environment:
+
+```bash
+pip freeze > requirements.txt
+```
+
 ### 5. Verify Installation
 
 ```bash
-pip list / pip freeze
+pip list
+# or
+pip freeze
 ```
 
