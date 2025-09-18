@@ -1,21 +1,18 @@
+import pytest
 import requests
-import sys
-import time
 from config import Config
 
 
+# ---------- Common Request Handler ----------
 def safe_request(method, url, **kwargs):
     try:
         resp = requests.request(method, url, timeout=Config.REQUEST_TIMEOUT, **kwargs)
     except requests.exceptions.Timeout:
-        print(f"[ERROR] Timeout when calling {url}")
-        return None
+        pytest.fail(f"[ERROR] Timeout when calling {url}")
     except requests.exceptions.ConnectionError as e:
-        print(f"[ERROR] Connection error when calling {url}: {e}")
-        return None
+        pytest.fail(f"[ERROR] Connection error when calling {url}: {e}")
     except Exception as e:
-        print(f"[ERROR] Unexpected error when calling {url}: {e}")
-        return None
+        pytest.fail(f"[ERROR] Unexpected error when calling {url}: {e}")
 
     try:
         body = resp.json()
@@ -25,103 +22,76 @@ def safe_request(method, url, **kwargs):
     return resp.status_code, body
 
 
-def test_create_category():
+# ---------- Fixtures ----------
+@pytest.fixture(scope="module")
+def category_id():
+    """Create a fresh category before tests, cleanup after"""
+    # Pre-cleanup
+    delete_if_exists("Automation Test Category")
+
+    # Create
     url = Config.BASE_URL + Config.ENDPOINTS["create_category"]
-    payload = {"name": "Automation Test Category", "description": "Created by automation script"}
-    print(f"\n[STEP] Create category -> POST {url}")
-    result = safe_request("post", url, headers=Config.HEADERS, json=payload)
-    if not result:
-        return None
-    status, body = result
-    print("Status:", status)
-    print("Body:", body)
+    payload = {"name": "Automation Test Category", "description": "Created by pytest"}
+    status, body = safe_request("post", url, headers=Config.HEADERS, json=payload)
 
+    assert status in (200, 201), f"Create failed: {status} {body}"
+
+    cid = None
     if isinstance(body, dict):
-        for k in ("id", "_id", "data", "category_id"):
-            if k in body:
-                if k == "data" and isinstance(body[k], dict):
-                    for sub in ("id", "_id"):
-                        if sub in body[k]:
-                            return body[k][sub]
-                else:
-                    return body[k]
-        if "data" in body and isinstance(body["data"], dict):
-            for sub in ("id", "_id"):
-                if sub in body["data"]:
-                    return body["data"][sub]
-    print("[WARN] Couldn't find created resource id in response.")
-    return None
+        for key in ("id", "_id", "category_id"):
+            if key in body:
+                cid = body[key]
+                break
+        if not cid and "data" in body and isinstance(body["data"], dict):
+            cid = body["data"].get("id") or body["data"].get("_id")
+
+    assert cid, f"No category id found in response: {body}"
+
+    yield cid
+
+    # Cleanup
+    del_url = Config.BASE_URL + Config.ENDPOINTS["delete_category"].format(id=cid)
+    safe_request("delete", del_url, headers=Config.HEADERS)
 
 
-def test_list_categories():
+def delete_if_exists(category_name):
+    """Delete category if already exists"""
     url = Config.BASE_URL + Config.ENDPOINTS["list_categories"]
-    print(f"\n[STEP] List categories -> POST {url}")
-    result = safe_request("post", url, headers=Config.HEADERS)
-    if not result:
-        return
-    status, body = result
-    print("Status:", status)
-    print("Body:", body)
-
-
-def test_update_category(category_id):
-    url = Config.BASE_URL + Config.ENDPOINTS["update_category"].format(id=category_id)
-    payload = {"name": "Updated Automation Category", "description": "Updated by automation script"}
-    print(f"\n[STEP] Update category -> PUT {url}")
-    result = safe_request("put", url, headers=Config.HEADERS, json=payload)
-    if not result:
-        return
-    status, body = result
-    print("Status:", status)
-    print("Body:", body)
-
-
-def test_delete_category(category_id):
-    url = Config.BASE_URL + Config.ENDPOINTS["delete_category"].format(id=category_id)
-    print(f"\n[STEP] Delete category -> DELETE {url}")
-    result = safe_request("delete", url, headers=Config.HEADERS)
-    if not result:
-        return
-    status, body = result
-    print("Status:", status)
-    print("Body:", body)
-
-
-def delete_if_exists(category_name="Automation Test Category"):
-    url = Config.BASE_URL + Config.ENDPOINTS["list_categories"]
-    result = safe_request("post", url, headers=Config.HEADERS)
-    if not result:
-        return
-    status, body = result
+    status, body = safe_request("post", url, headers=Config.HEADERS)
 
     if status == 200 and "data" in body and "categories" in body["data"]:
         for cat in body["data"]["categories"]:
-            if cat["name"] == category_name:
-                print(f"[INFO] Found existing category '{category_name}' with id={cat['id']}. Deleting it...")
-                test_delete_category(cat["id"])
+            if cat.get("name") == category_name:
+                del_url = Config.BASE_URL + Config.ENDPOINTS["delete_category"].format(id=cat["id"])
+                safe_request("delete", del_url, headers=Config.HEADERS)
                 break
 
 
+# ---------- Test Cases (method-wise) ----------
+def test_post_create_category(category_id):
+    """POST: Create Category (via fixture)"""
+    assert category_id is not None
 
-if __name__ == "__main__":
-    if not Config.BASE_URL or not Config.ADMIN_TOKEN:
-        print("Please set BASE_URL and ADMIN_TOKEN in your .env file. Exiting.")
-        sys.exit(1)
 
-    print("Starting automation tests against:", Config.BASE_URL)
+def test_get_list_categories():
+    """GET/POST: List Categories"""
+    url = Config.BASE_URL + Config.ENDPOINTS["list_categories"]
+    status, body = safe_request("post", url, headers=Config.HEADERS)
+    assert status == 200
+    assert "data" in body
 
-    delete_if_exists("Automation Test Category")
 
-    created_id = test_create_category()
-    time.sleep(0.5)
+def test_put_update_category(category_id):
+    """PUT: Update Category"""
+    url = Config.BASE_URL + Config.ENDPOINTS["update_category"].format(id=category_id)
+    payload = {"name": "Updated Automation Category", "description": "Updated by pytest"}
+    status, body = safe_request("put", url, headers=Config.HEADERS, json=payload)
+    assert status in (200, 201)
+    assert isinstance(body, dict)
 
-    test_list_categories()
-    time.sleep(0.5)
 
-    if created_id:
-        test_update_category(created_id)
-        time.sleep(0.5)
-        test_delete_category(created_id)
-    else:
-        print("\n[SKIP] No created resource id — skipping update & delete steps.")
-
+def test_delete_category(category_id):
+    """DELETE: Delete Category"""
+    url = Config.BASE_URL + Config.ENDPOINTS["delete_category"].format(id=category_id)
+    status, body = safe_request("delete", url, headers=Config.HEADERS)
+    assert status in (200, 204)
