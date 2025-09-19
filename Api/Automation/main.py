@@ -1,9 +1,18 @@
 import pytest
 import requests
 from config import Config
+from token_generate import get_jwt_token
 
 
 # ---------- Common Request Handler ----------
+
+@pytest.fixture(scope="session", autouse=True)
+def authenticate():
+    """Run once per test session: login and set token"""
+    get_jwt_token()
+    yield
+
+
 def safe_request(method, url, **kwargs):
     try:
         resp = requests.request(method, url, timeout=Config.REQUEST_TIMEOUT, **kwargs)
