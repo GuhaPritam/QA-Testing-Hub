@@ -11,7 +11,7 @@ def get_jwt_token():
     resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
     resp.raise_for_status()
     body = resp.json()
-    print("🔹 Login Response:", body)  # debug
+    print("Login Response:", body)
 
     token = (
         body.get("token") or

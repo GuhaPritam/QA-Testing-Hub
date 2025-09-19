@@ -5,10 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="97067c88-db8c-452d-9238-3361c073193f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Api/Automation/token_generate.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Api/Automation/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/Api/Automation/config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Api/Automation/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Api/Automation/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Api/Automation/token_generate.py" beforeDir="false" afterPath="$PROJECT_DIR$/Api/Automation/token_generate.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

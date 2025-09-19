@@ -8,7 +8,6 @@ from token_generate import get_jwt_token
 
 @pytest.fixture(scope="session", autouse=True)
 def authenticate():
-    """Run once per test session: login and set token"""
     get_jwt_token()
     yield
 
