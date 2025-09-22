@@ -11,7 +11,6 @@ def get_jwt_token():
     resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
     resp.raise_for_status()
     body = resp.json()
-    print("Login Response:", body)
 
     token = (
         body.get("token") or
@@ -26,4 +25,5 @@ def get_jwt_token():
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
+    print("-- [ info ] --Token generated successfully and added to headers.")
     return token
