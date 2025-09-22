@@ -5,8 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="97067c88-db8c-452d-9238-3361c073193f" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Api/Automation/tests/test_login.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Api/Automation/token_generate.py" beforeDir="false" afterPath="$PROJECT_DIR$/Api/Automation/token_generate.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Api/Automation/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/Api/Automation/src/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Api/Automation/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Api/Automation/tests/test_category.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Api/Automation/token_generate.py" beforeDir="false" afterPath="$PROJECT_DIR$/Api/Automation/src/token_generate.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,29 +47,13 @@
     &quot;last_opened_file_path&quot;: &quot;C:/Users/wadmin/OneDrive/Desktop/QA-Testing-Hub&quot;
   }
 }</component>
-  <component name="RunManager" selected="Python tests.Python tests in main.py">
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="QA-Testing-Hub" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Api/Automation" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Api/Automation/main.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\wadmin\OneDrive\Desktop\QA-Testing-Hub\Api\Automation\tests" />
+      <recent name="C:\Users\wadmin\OneDrive\Desktop\QA-Testing-Hub\Api\Automation\src" />
+    </key>
+  </component>
+  <component name="RunManager">
     <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="QA-Testing-Hub" />
       <option name="ENV_FILES" value="" />
@@ -89,7 +76,29 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Python tests in main.py" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+    <configuration name="test_category" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="QA-Testing-Hub" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Api/Automation" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="C:\Users\wadmin\OneDrive\Desktop\QA-Testing-Hub\Api\Automation\tests\test_category.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests in test_category.py" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
       <module name="QA-Testing-Hub" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -100,14 +109,14 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;$PROJECT_DIR$/Api/Automation/main.py&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/Api/Automation/tests/test_category.py&quot;" />
       <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python tests.Python tests in main.py" />
-        <item itemvalue="Python.main" />
+        <item itemvalue="Python tests.Python tests in test_category.py" />
+        <item itemvalue="Python.test_category" />
         <item itemvalue="Python.test" />
       </list>
     </recent_temporary>

@@ -1,6 +1,6 @@
 import pytest
 import requests
-from config import Config
+from Api.Automation.src.config import Config
 from token_generate import get_jwt_token
 
 
