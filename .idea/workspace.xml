@@ -5,15 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="97067c88-db8c-452d-9238-3361c073193f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Api/Automation/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Api/Automation/src/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Api/Automation/tests/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Api/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Api/Automation/runner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/QA-Testing-Hub.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/QA-Testing-Hub.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Api/Automation/src/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Api/Automation/src/utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Api/Automation/tests/conftest.py" beforeDir="false" afterPath="$PROJECT_DIR$/Api/Automation/tests/conftest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Api/Automation/tests/test_category.py" beforeDir="false" afterPath="$PROJECT_DIR$/Api/Automation/tests/test_category.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Api/Automation/tests/test_login.py" beforeDir="false" afterPath="$PROJECT_DIR$/Api/Automation/tests/test_login.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,7 +51,7 @@
       <recent name="C:\Users\wadmin\OneDrive\Desktop\QA-Testing-Hub\Api\Automation\src" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.test">
     <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="QA-Testing-Hub" />
       <option name="ENV_FILES" value="" />
