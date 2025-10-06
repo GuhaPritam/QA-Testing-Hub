@@ -10,11 +10,11 @@ if __name__ == "__main__":
     choice = input("Enter your choice (1/2/3): ").strip()
 
     if choice == "1":
-        exit_code = pytest.main(["-v", "./Api/Automation/tests/test_login.py"])
+        exit_code = pytest.main(["-v", "./Api/Automation/Tests/test_login.py"])
     elif choice == "2":
-        exit_code = pytest.main(["-v", "./Api/Automation/tests/test_category.py"])
+        exit_code = pytest.main(["-v", "./Api/Automation/Tests/test_category.py"])
     elif choice == "3":
-        exit_code = pytest.main(["-v", "./Api/Automation/tests/"])
+        exit_code = pytest.main(["-v", "./Api/Automation/Tests/"])
     else:
         print("Invalid choice")
         sys.exit(1)
