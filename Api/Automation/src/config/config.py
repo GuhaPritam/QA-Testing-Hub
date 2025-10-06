@@ -19,4 +19,9 @@ class Config:
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
     ADMIN_ROLE = os.getenv("ADMIN_ROLE")
 
+    # Wrong credentials for negative test
+    WRONG_EMAIL = os.getenv("WRONG_EMAIL")
+    WRONG_PASSWORD = os.getenv("WRONG_PASSWORD")
+    WRONG_ROLE = os.getenv("WRONG_ROLE")
+
     HEADERS = {}
