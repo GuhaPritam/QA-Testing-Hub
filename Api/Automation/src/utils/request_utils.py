@@ -1,6 +1,6 @@
 import pytest
 import requests
-from .config import Config
+from ..config.config import Config
 
 def safe_request(method, url, **kwargs):
     try:

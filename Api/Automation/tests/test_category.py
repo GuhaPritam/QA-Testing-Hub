@@ -1,6 +1,6 @@
 import pytest
-from Api.Automation.src.config import Config
-from Api.Automation.src.utils import safe_request
+from Api.Automation.src.config.config import Config
+from Api.Automation.src.utils.request_utils import safe_request
 
 class TestCategoryCRUD:
 

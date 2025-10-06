@@ -1,7 +1,7 @@
 import pytest
 import requests
-from Api.Automation.src.config import Config
-from Api.Automation.src.token_generate import get_jwt_token
+from Api.Automation.src.config.config import Config
+from Api.Automation.src.utils.token_generate_utils import get_jwt_token
 
 class TestLogin:
 
