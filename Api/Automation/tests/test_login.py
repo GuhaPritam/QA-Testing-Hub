@@ -21,8 +21,7 @@ class TestLoginAPI:
         """Token from utility function works for protected API."""
         token = get_jwt_token()
         url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS.get("profile", "/user/profile")
-        headers = {"Authorization": f"Bearer {token}"}
-        resp = requests.get(url, headers=headers, timeout=Config.REQUEST_TIMEOUT)
+        resp = requests.get(url, headers=Config.HEADERS, timeout=Config.REQUEST_TIMEOUT)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
         body = resp.json()
         assert "email" in body or "user" in body, "Expected user info in response"
@@ -115,8 +114,7 @@ class TestLoginAPI:
         """Tampered token is rejected."""
         token = get_jwt_token() + "abc"
         url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS.get("profile", "/user/profile")
-        headers = {"Authorization": f"Bearer {token}"}
-        resp = requests.get(url, headers=headers, timeout=Config.REQUEST_TIMEOUT)
+        resp = requests.get(url, headers=Config.HEADERS, timeout=Config.REQUEST_TIMEOUT)
         assert resp.status_code in [401, 403]
 
     # ---------- Performance / Concurrency ----------
