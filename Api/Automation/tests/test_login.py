@@ -11,7 +11,7 @@ class TestLoginAPI:
 
     # ---------- Positive Tests using utility ----------
     def test_login_success_token(self):
-        """Verify login succeeds and returns valid JWT token from utility function."""
+        """Verify login succeeds and returns valid (header.payload.signature) JWT token from utility function."""
         token = get_jwt_token()
         assert token is not None, "Token should not be None"
         assert isinstance(token, str), f"Token should be string, got {type(token)}"
