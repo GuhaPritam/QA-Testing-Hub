@@ -10,6 +10,7 @@ class Config:
     ENDPOINTS = {
         "login": os.getenv("ENDPOINT_LOGIN"),
         "logout": os.getenv("ENDPOINT_LOGOUT"),
+        "protected_endpoint": os.getenv("ENDPOINT_PROTECTED"),
         "create_category": os.getenv("ENDPOINT_CREATE_CATEGORY"),
         "list_categories": os.getenv("ENDPOINT_LIST_CATEGORIES"),
         "update_category": os.getenv("ENDPOINT_UPDATE_CATEGORY"),

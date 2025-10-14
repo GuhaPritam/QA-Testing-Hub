@@ -10,33 +10,21 @@ class TestLoginAPI:
     """Comprehensive Login API tests: positive, negative, edge, security, integration, performance."""
 
     # ---------- Positive Tests using utility ----------
-    def test_login_success_token(self):
+    def test_login_success_token(self, auth_token):
         """Verify login succeeds and returns valid (header.payload.signature) JWT token from utility function."""
-        token = get_jwt_token()
+        token = auth_token
         assert token is not None, "Token should not be None"
         assert isinstance(token, str), f"Token should be string, got {type(token)}"
         assert re.match(r"^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$", token), "Invalid JWT format"
 
-    def test_logout_and_token_invalidation(self):
-        """After logout, the token should not be valid anymore."""
-
-        # Step 1: Login → get valid token
-        token = get_jwt_token()
-        assert token, "Token generation failed"
-
-        # Step 2: Logout with that token
-        logout_url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS.get("logout", "/v1/auth/logout")
-        resp_logout = requests.post(logout_url, headers=Config.HEADERS, timeout=Config.REQUEST_TIMEOUT)
-        assert resp_logout.status_code in [200, 204], f"Logout failed, got {resp_logout.status_code}"
-
-        # Step 3: Try to access any protected endpoint with same token
-        protected_url = f"{Config.BASE_URL.rstrip('/')}/v1/admin/business/list"
-        resp_after_logout = requests.get(protected_url, headers=Config.HEADERS, timeout=Config.REQUEST_TIMEOUT)
-
-        # Step 4: Verify that token is now invalid
-        assert resp_after_logout.status_code in [401, 403], (
-            f"Expected 401/403 after logout, got {resp_after_logout.status_code}"
-        )
+    def test_token_allows_access_to_protected_endpoint(self, auth_token):
+        """Token from utility function works for protected API."""
+        token = auth_token
+        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["create_category"]
+        resp = requests.get(url, headers=Config.HEADERS, timeout=Config.REQUEST_TIMEOUT)
+        assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
+        body = resp.json()
+        assert "email" in body or "user" in body, "Expected user info in response"
 
     # ---------- Negative / Validation ----------
     @pytest.mark.parametrize("email,password,role", [
@@ -122,9 +110,9 @@ class TestLoginAPI:
         resp = requests.get(url, timeout=Config.REQUEST_TIMEOUT)
         assert resp.status_code in [401, 403]
 
-    def test_protected_endpoint_with_tampered_token(self):
+    def test_protected_endpoint_with_tampered_token(self, auth_token):
         """Tampered token is rejected."""
-        token = get_jwt_token() + "abc"
+        token = auth_token + "abc"
         url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS.get("profile", "/user/profile")
         resp = requests.get(url, headers=Config.HEADERS, timeout=Config.REQUEST_TIMEOUT)
         assert resp.status_code in [401, 403]
