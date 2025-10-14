@@ -1,8 +1,15 @@
 import pytest
 from Api.Automation.Src.Utils.token_generate_utils import get_jwt_token
 
+# session-level storage
+SESSION_TOKEN = None
+
+@pytest.fixture(scope="session", autouse=True)
+def authenticate():
+    global SESSION_TOKEN
+    SESSION_TOKEN = get_jwt_token()  # auto-run, store token
+    yield
+
 @pytest.fixture(scope="session")
 def auth_token():
-    """Generate token once per session and return it."""
-    token = get_jwt_token()
-    return token
+    return SESSION_TOKEN  # reuse same token
