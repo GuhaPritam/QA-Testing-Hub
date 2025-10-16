@@ -1,6 +1,6 @@
 import pytest
 import requests
-from Api.Automation.Src.Config.config import Config
+from Api.Automation.Src_ff.Config.config import Config
 
 def safe_request(method, url, **kwargs):
     try:
