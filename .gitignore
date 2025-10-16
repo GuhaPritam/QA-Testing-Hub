@@ -16,7 +16,7 @@ env/
 *.code-workspace
 
 # Environment Variables
-.env
+# .env
 
 # Vercel
 .vercel/
