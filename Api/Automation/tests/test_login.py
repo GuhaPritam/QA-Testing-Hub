@@ -4,8 +4,8 @@ import pytest
 import requests
 import re
 import threading
-from Api.Automation.Src_ff.Config.config import Config
-from Api.Automation.Src_ff.Utils.token_generate_utils import get_jwt_token
+from Api.Automation.Src.Config.config import Config
+from Api.Automation.Src.Utils.token_generate_utils import get_jwt_token
 
 
 class TestLoginAPI:

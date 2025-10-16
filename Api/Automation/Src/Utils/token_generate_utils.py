@@ -1,5 +1,5 @@
 import requests
-from Api.Automation.Src_ff.Config.config import Config
+from Api.Automation.Src.Config.config import Config
 
 def get_jwt_token():
     url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]

@@ -1,5 +1,5 @@
 import pytest
-from Api.Automation.Src_ff.Utils.token_generate_utils import get_jwt_token
+from Api.Automation.Src.Utils.token_generate_utils import get_jwt_token
 
 # session-level storage
 SESSION_TOKEN = None
