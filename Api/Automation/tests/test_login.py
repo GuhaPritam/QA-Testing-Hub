@@ -39,7 +39,6 @@ class TestLoginAPI:
         (Config.WRONG_EMAIL, Config.ADMIN_PASSWORD, Config.ADMIN_ROLE),
         (Config.WRONG_EMAIL, Config.WRONG_PASSWORD, Config.ADMIN_ROLE),
         (Config.ADMIN_EMAIL, Config.ADMIN_PASSWORD, Config.WRONG_ROLE),
-        (Config.ADMIN_EMAIL, Config.ADMIN_PASSWORD, Config.ADMIN_ROLE),
     ])
     def test_login_invalid_credentials(self, email, password, role):
         """Invalid credentials or role returns proper error code."""
@@ -58,7 +57,7 @@ class TestLoginAPI:
         print(f"   → Response Body : {body}")
         print("------------------------------------------------")
 
-        assert resp.status_code in [200, 400, 401, 403], \
+        assert resp.status_code in [400, 401, 403], \
             f"Expected 200/400/401/403, got {resp.status_code} for {email}, {role}"
 
         assert "error" in body or "message" in body, \
@@ -80,13 +79,13 @@ class TestLoginAPI:
         assert "error" in body or "message" in body
 
 
-    # def test_login_invalid_email_format(self):
-    #     """Invalid email format rejected."""
-    #     url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-    #     payload = {"email": "invalid_email", "password": "1234", "role": Config.ADMIN_ROLE}
-    #     resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
-    #     assert resp.status_code in [400, 422]
-    #
+    def test_login_invalid_email_format(self):
+        """Invalid email format rejected."""
+        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
+        payload = {"email": "invalid_email", "password": "1234", "role": Config.ADMIN_ROLE}
+        resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
+        assert resp.status_code in [400, 422]
+
     # def test_login_empty_body(self):
     #     """Empty raw body fails."""
     #     url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
