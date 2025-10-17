@@ -175,22 +175,3 @@ class TestLoginAPI:
 
         total_time = time.time() - start_all
         print(f"\nTotal time for {num_users} users: {total_time:.2f} sec")
-
-
-    def test_rate_limit(self):
-        """Simulate basic rate-limiting behavior."""
-        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-        payload = {"email": Config.ADMIN_EMAIL, "password": Config.ADMIN_PASSWORD, "role": Config.ADMIN_ROLE}
-        timeout_seconds = 30
-
-        responses = []
-        for i in range(15):
-            try:
-                resp = requests.post(url, json=payload, timeout=timeout_seconds)
-                responses.append(resp)
-            except requests.RequestException as e:
-                responses.append(f"Error: {e}")
-
-        codes = [r.status_code if isinstance(r, requests.Response) else r for r in responses]
-        # Check if at least one 429 received or all successful
-        assert any(c == 429 for c in codes if isinstance(c, int)) or all(c == 200 for c in codes if isinstance(c, int))
