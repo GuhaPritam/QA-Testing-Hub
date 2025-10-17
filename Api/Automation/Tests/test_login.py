@@ -6,6 +6,7 @@ import re
 import threading
 from Api.Automation.Src.Config.config import Config
 from Api.Automation.Src.Utils.token_generate_utils import get_jwt_token
+from Api.Automation.Src.Utils.print_api_utils import print_api_response
 
 
 class TestLoginAPI:
@@ -46,19 +47,10 @@ class TestLoginAPI:
         payload = {"email": email, "password": password, "role": role}
 
         resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
-        body = resp.json()
-
-        print("\n------------------------------------------------")
-        print(f"🔹 Testing invalid credential:")
-        print(f"   Email    : {email}")
-        print(f"   Password : {password}")
-        print(f"   Role     : {role}")
-        print(f"   → Response Code : {resp.status_code}")
-        print(f"   → Response Body : {body}")
-        print("------------------------------------------------")
+        body = print_api_response("Testing invalid credentials", payload, resp)
 
         assert resp.status_code in [400, 401, 403], \
-            f"Expected 200/400/401/403, got {resp.status_code} for {email}, {role}"
+            f"Expected 400/401/403, got {resp.status_code} for {email}, {role}"
 
         assert "error" in body or "message" in body, \
             f"No error/message key found in response for {email}, {role}"
@@ -74,20 +66,9 @@ class TestLoginAPI:
         """Missing or null fields return validation error."""
         url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
         resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
-        body = resp.json()
+        body = print_api_response("Testing missing/null fields", payload, resp)
 
-        # 🔹 Print debug info for each payload
-        print("\n------------------------------------------------")
-        print(f"   Testing missing/null fields:")
-        print(f"   Payload : {payload}")
-        print(f"   → Response Code : {resp.status_code}")
-        print(f"   → Response Body : {body}")
-        print("------------------------------------------------")
-
-        # Assert expected status codes
         assert resp.status_code in [400, 422], f"Expected 400/422, got {resp.status_code} for payload={payload}"
-
-        # Assert API returned error/message
         assert "error" in body or "message" in body, f"No error/message key found in response for payload={payload}"
 
 
@@ -97,38 +78,45 @@ class TestLoginAPI:
         payload = {"email": "invalid_email", "password": "1234", "role": Config.ADMIN_ROLE}
 
         resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
-        body = resp.json()
-
-        # 🔹 Print debug info
-        print("\n------------------------------------------------")
-        print(f"   Testing invalid email format:")
-        print(f"   Payload : {payload}")
-        print(f"   → Response Code : {resp.status_code}")
-        print(f"   → Response Body : {body}")
-        print("------------------------------------------------")
+        body = print_api_response("Testing invalid email format", payload, resp)
 
         assert resp.status_code in [400, 422], \
             f"Expected 400/422, got {resp.status_code} for payload={payload}"
         assert "error" in body or "message" in body, \
             f"No error/message key found in response for payload={payload}"
 
-    # def test_login_empty_body(self):
-    #     """Empty raw body fails."""
-    #     url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-    #     resp = requests.post(url, data="", timeout=Config.REQUEST_TIMEOUT)
-    #     assert resp.status_code in [400, 422]
-    #
-    # def test_login_long_input(self):
-    #     """Very long email/password handled gracefully."""
-    #     url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-    #     payload = {
-    #         "email": "a" * 10000 + "@example.com",
-    #         "password": "b" * 10000,
-    #         "role": Config.ADMIN_ROLE,
-    #     }
-    #     resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
-    #     assert resp.status_code in [400, 413]
-    #
+
+    def test_login_empty_body(self):
+        """Empty raw body fails."""
+        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
+        payload = {}
+        resp = requests.post(url, data="", timeout=Config.REQUEST_TIMEOUT)
+        body = print_api_response("Testing empty body", payload, resp)
+
+        # Assertions
+        assert resp.status_code in [400, 422], \
+            f"Expected 400/422, got {resp.status_code} for payload={payload}"
+        assert "error" in body or "message" in body, \
+            f"No error/message key found in response for payload={payload}"
+
+
+    def test_login_long_input(self):
+        """Very long email/password handled gracefully."""
+        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
+        payload = {
+            "email": "a" * 10000 + "@example.com",
+            "password": "b" * 10000,
+            "role": Config.ADMIN_ROLE,
+        }
+        resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
+        body = print_api_response("Testing very long input", payload, resp)
+
+        # Assertions
+        assert resp.status_code in [400, 413], \
+            f"Expected 400/413, got {resp.status_code} for payload={payload}"
+        assert "error" in body or "message" in body, \
+            f"No error/message key found in response for payload={payload}"
+
     # # ---------- HTTP Method Validation ----------
     # @pytest.mark.parametrize("method", ["get", "put", "delete", "patch"])
     # def test_login_invalid_methods(self, method):
