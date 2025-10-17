@@ -95,9 +95,22 @@ class TestLoginAPI:
         """Invalid email format rejected."""
         url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
         payload = {"email": "invalid_email", "password": "1234", "role": Config.ADMIN_ROLE}
-        resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
-        assert resp.status_code in [400, 422]
 
+        resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
+        body = resp.json()
+
+        # 🔹 Print debug info
+        print("\n------------------------------------------------")
+        print(f"   Testing invalid email format:")
+        print(f"   Payload : {payload}")
+        print(f"   → Response Code : {resp.status_code}")
+        print(f"   → Response Body : {body}")
+        print("------------------------------------------------")
+
+        assert resp.status_code in [400, 422], \
+            f"Expected 400/422, got {resp.status_code} for payload={payload}"
+        assert "error" in body or "message" in body, \
+            f"No error/message key found in response for payload={payload}"
 
     # def test_login_empty_body(self):
     #     """Empty raw body fails."""
