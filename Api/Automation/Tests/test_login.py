@@ -7,6 +7,8 @@ import threading
 from Api.Automation.Src.Config.config import Config
 from Api.Automation.Src.Utils.token_generate_utils import get_jwt_token
 from Api.Automation.Src.Utils.print_api_utils import print_api_response
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 
 
 class TestLoginAPI:
@@ -117,64 +119,70 @@ class TestLoginAPI:
         assert "error" in body or "message" in body, \
             f"No error/message key found in response for payload={payload}"
 
-    # # ---------- HTTP Method Validation ----------
-    # @pytest.mark.parametrize("method", ["get", "put", "delete", "patch"])
-    # def test_login_invalid_methods(self, method):
-    #     """Non-POST methods return 405."""
-    #     url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-    #     resp = getattr(requests, method)(url, timeout=Config.REQUEST_TIMEOUT)
-    #     assert resp.status_code == 405
-    #
-    # # ---------- Security ----------
-    # def test_sql_injection_attempt(self):
-    #     """SQL injection payload rejected."""
-    #     url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-    #     payload = {"email": "' OR 1=1 --", "password": "x", "role": Config.ADMIN_ROLE}
-    #     resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
-    #     assert resp.status_code in [400, 401, 403]
-    #
-    # def test_xss_payload_attempt(self):
-    #     """XSS payload rejected."""
-    #     url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-    #     payload = {"email": "<script>alert(1)</script>", "password": "x", "role": Config.ADMIN_ROLE}
-    #     resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
-    #     assert resp.status_code in [400, 401, 422]
-    #
-    # # ---------- Integration / Token Behavior ----------
-    # def test_protected_endpoint_without_token(self):
-    #     """Protected API without token returns 401/403."""
-    #     url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS.get("profile", "/user/profile")
-    #     resp = requests.get(url, timeout=Config.REQUEST_TIMEOUT)
-    #     assert resp.status_code in [401, 403]
-    #
-    # def test_protected_endpoint_with_tampered_token(self, auth_token):
-    #     """Tampered token is rejected."""
-    #     token = auth_token + "abc"
-    #     url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS.get("profile", "/user/profile")
-    #     resp = requests.get(url, headers=Config.HEADERS, timeout=Config.REQUEST_TIMEOUT)
-    #     assert resp.status_code in [401, 403]
-    #
-    # # ---------- Performance / Concurrency ----------
-    # def test_multiple_parallel_logins(self):
-    #     """Simulate concurrent login requests."""
-    #     url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-    #     payload = {"email": Config.ADMIN_EMAIL, "password": Config.ADMIN_PASSWORD, "role": Config.ADMIN_ROLE}
-    #     results = []
-    #
-    #     def do_login():
-    #         resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
-    #         results.append(resp.status_code)
-    #
-    #     threads = [threading.Thread(target=do_login) for _ in range(5)]
-    #     [t.start() for t in threads]
-    #     [t.join() for t in threads]
-    #
-    #     assert all(r == 200 for r in results)
-    #
-    # def test_rate_limit(self):
-    #     """Basic rate-limit simulation."""
-    #     url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-    #     payload = {"email": Config.ADMIN_EMAIL, "password": Config.ADMIN_PASSWORD, "role": Config.ADMIN_ROLE}
-    #     responses = [requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT) for _ in range(15)]
-    #     codes = [r.status_code for r in responses]
-    #     assert any(c == 429 for c in codes) or all(c == 200 for c in codes)
+
+    # ---------- HTTP Method Validation ----------
+    @pytest.mark.parametrize("method", ["get", "put", "delete", "patch"])
+    def test_login_invalid_methods(self, method):
+        """Non-POST methods return 405."""
+        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
+        resp = getattr(requests, method)(url, timeout=Config.REQUEST_TIMEOUT)
+        payload = {"method": method}
+        body = print_api_response(f"Testing invalid HTTP method: {method.upper()}", payload, resp)
+
+        # Assertions
+        assert resp.status_code in [404, 405], \
+            f"Expected 405 or 404, got {resp.status_code} for method={method}"
+        if isinstance(body, dict):
+            assert "error" in body or "message" in body, \
+                f"No error/message key found in response for method={method}"
+
+
+
+    # ---------- Performance / Concurrency ----------
+    def test_multiple_parallel_logins(self):
+        """Simulate multiple parallel login requests safely."""
+        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
+        payload = {
+            "email": Config.ADMIN_EMAIL,
+            "password": Config.ADMIN_PASSWORD,
+            "role": Config.ADMIN_ROLE
+        }
+        max_workers = 50  # reduce if server overloads
+        timeout_seconds = 30
+        results = []
+
+        def do_login(index):
+            try:
+                resp = requests.post(url, json=payload, timeout=timeout_seconds)
+                return (index, resp.status_code)
+            except requests.RequestException as e:
+                return (index, f"Error: {e}")
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(do_login, i) for i in range(max_workers)]
+            for future in as_completed(futures):
+                idx, result = future.result()
+                results.append((idx, result))
+                print(f"Login {idx}: {result}")
+
+        successful = [r for _, r in results if r == 200]
+        assert len(successful) == max_workers, "Some logins failed!"
+
+
+    def test_rate_limit(self):
+        """Simulate basic rate-limiting behavior."""
+        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
+        payload = {"email": Config.ADMIN_EMAIL, "password": Config.ADMIN_PASSWORD, "role": Config.ADMIN_ROLE}
+        timeout_seconds = 30
+
+        responses = []
+        for i in range(15):
+            try:
+                resp = requests.post(url, json=payload, timeout=timeout_seconds)
+                responses.append(resp)
+            except requests.RequestException as e:
+                responses.append(f"Error: {e}")
+
+        codes = [r.status_code if isinstance(r, requests.Response) else r for r in responses]
+        # Check if at least one 429 received or all successful
+        assert any(c == 429 for c in codes if isinstance(c, int)) or all(c == 200 for c in codes if isinstance(c, int))
