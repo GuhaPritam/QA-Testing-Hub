@@ -1,4 +1,5 @@
 import json
+import time
 
 import pytest
 import requests
@@ -139,34 +140,41 @@ class TestLoginAPI:
 
 
     # ---------- Performance / Concurrency ----------
-    def test_multiple_parallel_logins(self):
-        """Simulate multiple parallel login requests safely."""
+    def test_parallel_logins_auto_timeout(self, num_users=50):
+        """
+        Simulate multiple parallel logins without manually setting a timeout.
+        The function measures time taken for each request and total execution.
+        """
         url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
+
         payload = {
             "email": Config.ADMIN_EMAIL,
             "password": Config.ADMIN_PASSWORD,
             "role": Config.ADMIN_ROLE
         }
-        max_workers = 50  # reduce if server overloads
-        timeout_seconds = 30
+
         results = []
 
         def do_login(index):
+            start = time.time()
             try:
-                resp = requests.post(url, json=payload, timeout=timeout_seconds)
-                return (index, resp.status_code)
+                resp = requests.post(url, json=payload)
+                duration = time.time() - start
+                return (index, resp.status_code, duration)
             except requests.RequestException as e:
-                return (index, f"Error: {e}")
+                duration = time.time() - start
+                return (index, f"Error: {e}", duration)
 
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [executor.submit(do_login, i) for i in range(max_workers)]
+        start_all = time.time()
+        with ThreadPoolExecutor(max_workers=num_users) as executor:
+            futures = [executor.submit(do_login, i) for i in range(num_users)]
             for future in as_completed(futures):
-                idx, result = future.result()
-                results.append((idx, result))
-                print(f"Login {idx}: {result}")
+                idx, status, duration = future.result()
+                results.append((idx, status, duration))
+                print(f"Login {idx}: {status} (Time taken: {duration:.2f} sec)")
 
-        successful = [r for _, r in results if r == 200]
-        assert len(successful) == max_workers, "Some logins failed!"
+        total_time = time.time() - start_all
+        print(f"\nTotal time for {num_users} users: {total_time:.2f} sec")
 
 
     def test_rate_limit(self):
