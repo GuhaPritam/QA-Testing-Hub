@@ -11,9 +11,10 @@ venv/
 env/
 .venv/
 
-# VS Code
+# IDEs
 .vscode/
 *.code-workspace
+.idea/
 
 # Environment Variables
 # .env

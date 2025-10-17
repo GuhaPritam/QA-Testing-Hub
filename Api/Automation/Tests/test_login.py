@@ -138,7 +138,6 @@ class TestLoginAPI:
                 f"No error/message key found in response for method={method}"
 
 
-
     # ---------- Performance / Concurrency ----------
     def test_parallel_logins_auto_timeout(self, num_users=50):
         """
@@ -160,10 +159,10 @@ class TestLoginAPI:
             try:
                 resp = requests.post(url, json=payload)
                 duration = time.time() - start
-                return (index, resp.status_code, duration)
+                return index, resp.status_code, duration
             except requests.RequestException as e:
                 duration = time.time() - start
-                return (index, f"Error: {e}", duration)
+                return index, f"Error: {e}", duration
 
         start_all = time.time()
         with ThreadPoolExecutor(max_workers=num_users) as executor:
