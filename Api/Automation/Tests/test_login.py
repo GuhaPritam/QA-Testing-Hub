@@ -6,7 +6,7 @@ import requests
 import re
 import threading
 from Api.Automation.Src.Config.config import Config
-from Api.Automation.Src.Utils.token_generate_utils import get_jwt_token
+from jsonschema import validate, ValidationError
 from Api.Automation.Src.Utils.print_api_utils import print_api_response
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -174,3 +174,38 @@ class TestLoginAPI:
 
         total_time = time.time() - start_all
         print(f"\nTotal time for {num_users} users: {total_time:.2f} sec")
+
+
+    def test_login_response_schema(self):
+        """
+        Validate login endpoint response schema against actual API response structure.
+        """
+        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
+        payload = {
+            "email": Config.ADMIN_EMAIL,
+            "password": Config.ADMIN_PASSWORD,
+            "role": Config.ADMIN_ROLE
+        }
+
+        resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
+        body = print_api_response("Schema validation for login response", payload, resp)
+
+        # fallback to JSON parsing if utility returned None
+        try:
+            if body is None:
+                body = resp.json()
+        except Exception:
+            try:
+                body = json.loads(resp.text)
+            except Exception:
+                body = resp.text
+
+        # Ensure login success
+        assert resp.status_code in [200, 201], f"Expected 200/201 on successful login, got {resp.status_code}"
+
+        # Perform schema validation
+        try:
+            validate(instance=body, schema=Config.LOGIN_SCHEMA)
+            print("Login response schema validation passed")
+        except ValidationError as ve:
+            pytest.fail(f"Login response schema validation failed: {ve}\nResponse body: {json.dumps(body, indent=2, ensure_ascii=False)}")

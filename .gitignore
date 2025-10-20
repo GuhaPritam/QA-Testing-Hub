@@ -15,6 +15,7 @@ env/
 .vscode/
 *.code-workspace
 .idea/
+workspace.xml
 
 # Environment Variables
 # .env
@@ -27,3 +28,7 @@ env/
 
 # Windows
 Thumbs.db
+
+# Test / Generated Files
+report.html
+style.css

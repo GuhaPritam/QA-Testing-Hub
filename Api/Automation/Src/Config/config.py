@@ -26,4 +26,28 @@ class Config:
     WRONG_PASSWORD = os.getenv("WRONG_PASSWORD")
     WRONG_ROLE = os.getenv("WRONG_ROLE")
 
+    LOGIN_SCHEMA = {
+        "type": "object",
+        "required": ["code", "message", "data"],
+        "properties": {
+            "code": {"type": "integer"},
+            "message": {"type": "string"},
+            "data": {
+                "type": "object",
+                "required": ["user", "token"],
+                "properties": {
+                    "user": {"type": "object"},
+                    "token": {
+                        "type": "object",
+                        "required": ["access", "refresh"],
+                        "properties": {
+                            "access": {"type": "string"},
+                            "refresh": {"type": "string"}
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     HEADERS = {}
