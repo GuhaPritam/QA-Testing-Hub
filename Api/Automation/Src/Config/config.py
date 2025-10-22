@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class Config:
     BASE_URL = os.getenv("BASE_URL")
     REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", 10))
@@ -25,6 +26,8 @@ class Config:
     WRONG_EMAIL = os.getenv("WRONG_EMAIL")
     WRONG_PASSWORD = os.getenv("WRONG_PASSWORD")
     WRONG_ROLE = os.getenv("WRONG_ROLE")
+
+    HEADERS = {}
 
     LOGIN_SCHEMA = {
         "type": "object",
@@ -50,4 +53,3 @@ class Config:
         }
     }
 
-    HEADERS = {}
