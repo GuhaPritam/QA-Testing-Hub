@@ -1,8 +1,12 @@
 import pytest
 import uuid
+import json
+import requests
+import traceback
 from Api.Automation.Src.Config.config import Config
 from Api.Automation.Src.Utils.request_utils import safe_request
 from Api.Automation.Src.Utils.print_api_utils import print_api_response
+from jsonschema import validate, ValidationError
 
 
 def _extract_id(body):
@@ -35,6 +39,8 @@ class TestCategoryCRUD:
     @pytest.fixture(scope="class")
     def category_id(self):
         """Create unique category before tests, delete after tests."""
+        cid = None
+        base = None
         try:
             category_name = f"Automation Test Category {uuid.uuid4().hex[:8]}"
             category_description = "Created by Automation Test Suite"
@@ -47,11 +53,15 @@ class TestCategoryCRUD:
             status, body = safe_request("post", create_url, headers=Config.HEADERS, json=payload)
             print_api_response("Create Category Fixture", payload, body)
             assert status in (200, 201), f"Create failed: status={status}, body={body}"
+
+            # extract id (response may wrap the object under "data")
             cid = _extract_id(body)
             assert cid, f"No category id found in creation response: {body}"
-            # validate response values
-            assert body.get("name") == category_name
-            assert body.get("description") == category_description
+
+            # validate response values inside "data" if present
+            data = body.get("data") if isinstance(body, dict) else {}
+            assert data.get("name") == category_name, f"Unexpected name in response: {data}"
+            assert data.get("description") == category_description, f"Unexpected description in response: {data}"
 
             yield cid  # provide category id to tests
 
@@ -62,7 +72,7 @@ class TestCategoryCRUD:
         finally:
             # CLEANUP
             try:
-                if cid:
+                if cid and base:
                     del_url = base + Config.ENDPOINTS["delete_category"].format(id=cid)
                     d_status, d_body = safe_request("delete", del_url, headers=Config.HEADERS)
                     if d_status not in (200, 204):
@@ -78,6 +88,7 @@ class TestCategoryCRUD:
             assert category_id is not None, "category_id fixture did not yield an id"
         except Exception as e:
             pytest.fail(f"Category creation test failed: {e}")
+
 
     def test_get_list_categories(self, category_id):
         """Verify created category exists in list."""
@@ -97,6 +108,7 @@ class TestCategoryCRUD:
         except Exception as e:
             pytest.fail(f"List categories test failed: {e}")
 
+
     def test_put_update_category(self, category_id):
         """Verify category update API updates name/description correctly."""
         try:
@@ -110,10 +122,15 @@ class TestCategoryCRUD:
             print_api_response("Update Category Test", payload, body)
             assert status in (200, 201), f"Update failed: status={status}, body={body}"
             assert isinstance(body, dict), f"Unexpected update response: {body}"
-            assert body.get("name") == updated_name
-            assert body.get("description") == updated_desc
+
+            # response payload places the updated object under "data"
+            data = body.get("data") if isinstance(body, dict) else None
+            assert data and isinstance(data, dict), f"No 'data' object in response: {body}"
+            assert data.get("name") == updated_name
+            assert data.get("description") == updated_desc
         except Exception as e:
             pytest.fail(f"Update category test failed: {e}")
+
 
     def test_delete_category(self, category_id):
         """Verify category delete API removes the category."""
@@ -134,3 +151,43 @@ class TestCategoryCRUD:
                     "Deleted category still found in list"
         except Exception as e:
             pytest.fail(f"Delete category test failed: {e}")
+
+
+    # add schema validation test similar to test_login_response_schema
+    def test_category_response_schema(self, category_id):
+        """
+        Validate category list response schema by validating the first category item
+        against Config.CATEGORY_SCHEMA (keeps style similar to test_login_response_schema).
+        """
+        try:
+            base = Config.BASE_URL.rstrip("/")
+            list_url = base + Config.ENDPOINTS["list_categories"]
+
+            resp = requests.post(list_url, headers=Config.HEADERS, timeout=Config.REQUEST_TIMEOUT)
+            body = print_api_response("Schema validation for category list response", None, resp)
+
+            # fallback to JSON parsing if utility returned None
+            try:
+                if body is None:
+                    body = resp.json()
+            except Exception:
+                try:
+                    body = json.loads(resp.text)
+                except Exception:
+                    body = resp.text
+
+            assert resp.status_code == 200, f"Expected 200 on list categories, got {resp.status_code}"
+
+            # extract first category item
+            data = body.get("data") if isinstance(body, dict) else {}
+            categories = data.get("categories") if isinstance(data, dict) else data
+            assert isinstance(categories, list) and categories, f"No categories array in response: {body}"
+            first = categories[0]
+
+            try:
+                validate(instance=first, schema=Config.CATEGORY_SCHEMA)
+                print("Category item schema validation passed")
+            except ValidationError as ve:
+                pytest.fail(f"Category schema validation failed: {ve}\nItem: {json.dumps(first, indent=2, ensure_ascii=False)}")
+        except Exception as e:
+            pytest.fail(f"Unexpected error in test_category_response_schema: {e}\n{traceback.format_exc()}")

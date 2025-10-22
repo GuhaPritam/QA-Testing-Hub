@@ -53,3 +53,32 @@ class Config:
         }
     }
 
+    CATEGORY_SCHEMA = {
+        "type": "object",
+        "required": ["id", "name", "description", "serialNumber", "formattedSerial", "createdAt", "updatedAt",
+                     "isActive"],
+        "properties": {
+            "id": {"type": "string"},
+            "serialNumber": {"type": "number"},
+            "formattedSerial": {"type": "string"},
+            "name": {"type": "string"},
+            "description": {"type": ["string", "null"]},
+            "createdAt": {"type": "string"},
+            "updatedAt": {"type": "string"},
+            "isActive": {"type": "boolean"},
+            "keywords": {"type": "array", "items": {"type": "string"}},
+            "subCategories": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "string"},
+                        "name": {"type": "string"},
+                        "categoryId": {"type": "string"}
+                    }
+                }
+            },
+            "status": {"type": "string"}
+        }
+    }
+
