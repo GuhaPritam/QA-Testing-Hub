@@ -1,3 +1,21 @@
+"""
+API Response Debug Utility
+-------------------------
+Purpose: Print formatted API request/response details for:
+- Test debugging & troubleshooting
+- Response validation
+- API behavior monitoring
+
+Usage:
+    print_api_response("Test Name", payload, response)
+
+Output format:
+    Test Name
+    Payload sent
+    Response status (if applicable)
+    Response body (formatted JSON)
+"""
+
 import json
 
 def print_api_response(test_name, payload, resp):

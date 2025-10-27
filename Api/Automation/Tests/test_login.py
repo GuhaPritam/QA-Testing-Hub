@@ -9,8 +9,8 @@ import traceback
 from Api.Automation.Src.Config.config import Config
 from jsonschema import validate, ValidationError
 from Api.Automation.Src.Utils.print_api_utils import print_api_response
+from Api.Automation.Src.Utils.schema_validation_utils import validate_response_schema
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
 
 
 class TestLoginAPI:
@@ -27,7 +27,6 @@ class TestLoginAPI:
         except Exception as e:
             pytest.fail(f"Unexpected error in test_login_success_token: {e}\n{traceback.format_exc()}")
 
-
     def test_token_allows_access_to_protected_endpoint(self, auth_token):
         """Token from utility function works for protected API."""
         try:
@@ -41,8 +40,8 @@ class TestLoginAPI:
             elif resp.status_code == 404:
                 print("\n No data found for this endpoint — valid 404 case.")
         except Exception as e:
-            pytest.fail(f"Unexpected error in test_token_allows_access_to_protected_endpoint: {e}\n{traceback.format_exc()}")
-
+            pytest.fail(
+                f"Unexpected error in test_token_allows_access_to_protected_endpoint: {e}\n{traceback.format_exc()}")
 
     # ---------- Negative / Validation ----------
     @pytest.mark.parametrize("email,password,role", [
@@ -66,8 +65,8 @@ class TestLoginAPI:
             assert "error" in body or "message" in body, \
                 f"No error/message key found in response for {email}, {role}"
         except Exception as e:
-            pytest.fail(f"Unexpected error in test_login_invalid_credentials ({email}, {role}): {e}\n{traceback.format_exc()}")
-
+            pytest.fail(
+                f"Unexpected error in test_login_invalid_credentials ({email}, {role}): {e}\n{traceback.format_exc()}")
 
     @pytest.mark.parametrize("payload", [
         {"email": Config.ADMIN_EMAIL},  # missing password
@@ -85,8 +84,8 @@ class TestLoginAPI:
             assert resp.status_code in [400, 422], f"Expected 400/422, got {resp.status_code} for payload={payload}"
             assert "error" in body or "message" in body, f"No error/message key found in response for payload={payload}"
         except Exception as e:
-            pytest.fail(f"Unexpected error in test_login_missing_fields (payload={payload}): {e}\n{traceback.format_exc()}")
-
+            pytest.fail(
+                f"Unexpected error in test_login_missing_fields (payload={payload}): {e}\n{traceback.format_exc()}")
 
     def test_login_invalid_email_format(self):
         """Invalid email format rejected."""
@@ -104,7 +103,6 @@ class TestLoginAPI:
         except Exception as e:
             pytest.fail(f"Unexpected error in test_login_invalid_email_format: {e}\n{traceback.format_exc()}")
 
-
     def test_login_empty_body(self):
         """Empty raw body fails."""
         try:
@@ -120,7 +118,6 @@ class TestLoginAPI:
                 f"No error/message key found in response for payload={payload}"
         except Exception as e:
             pytest.fail(f"Unexpected error in test_login_empty_body: {e}\n{traceback.format_exc()}")
-
 
     def test_login_long_input(self):
         """Very long email/password handled gracefully."""
@@ -142,7 +139,6 @@ class TestLoginAPI:
         except Exception as e:
             pytest.fail(f"Unexpected error in test_login_long_input: {e}\n{traceback.format_exc()}")
 
-
     # ---------- HTTP Method Validation ----------
     @pytest.mark.parametrize("method", ["get", "put", "delete", "patch"])
     def test_login_invalid_methods(self, method):
@@ -160,8 +156,8 @@ class TestLoginAPI:
                 assert "error" in body or "message" in body, \
                     f"No error/message key found in response for method={method}"
         except Exception as e:
-            pytest.fail(f"Unexpected error in test_login_invalid_methods (method={method}): {e}\n{traceback.format_exc()}")
-
+            pytest.fail(
+                f"Unexpected error in test_login_invalid_methods (method={method}): {e}\n{traceback.format_exc()}")
 
     # ---------- Performance / Concurrency ----------
     def test_parallel_logins_auto_timeout(self, num_users=50):
@@ -203,18 +199,16 @@ class TestLoginAPI:
                         print(f"Login {idx}: {status} (Time taken: {duration:.2f} sec)")
                     except Exception as e:
                         # capture any worker exception
-                        pytest.fail(f"Worker raised exception in test_parallel_logins_auto_timeout: {e}\n{traceback.format_exc()}")
+                        pytest.fail(
+                            f"Worker raised exception in test_parallel_logins_auto_timeout: {e}\n{traceback.format_exc()}")
 
             total_time = time.time() - start_all
             print(f"\nTotal time for {num_users} users: {total_time:.2f} sec")
         except Exception as e:
             pytest.fail(f"Unexpected error in test_parallel_logins_auto_timeout: {e}\n{traceback.format_exc()}")
 
-
     def test_login_response_schema(self):
-        """
-        Validate login endpoint response schema against actual API response structure.
-        """
+        """Validate login endpoint response schema."""
         try:
             url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
             payload = {
@@ -224,26 +218,10 @@ class TestLoginAPI:
             }
 
             resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
-            body = print_api_response("Schema validation for login response", payload, resp)
+            body = print_api_response("Login Schema Validation", payload, resp)
 
-            # fallback to JSON parsing if utility returned None
-            try:
-                if body is None:
-                    body = resp.json()
-            except Exception:
-                try:
-                    body = json.loads(resp.text)
-                except Exception:
-                    body = resp.text
+            assert resp.status_code in [200, 201], f"Expected 200/201, got {resp.status_code}"
+            validate_response_schema(body, Config.LOGIN_SCHEMA, "Login Response")
 
-            # Ensure login success
-            assert resp.status_code in [200, 201], f"Expected 200/201 on successful login, got {resp.status_code}"
-
-            # Perform schema validation
-            try:
-                validate(instance=body, schema=Config.LOGIN_SCHEMA)
-                print("Login response schema validation passed")
-            except ValidationError as ve:
-                pytest.fail(f"Login response schema validation failed: {ve}\nResponse body: {json.dumps(body, indent=2, ensure_ascii=False)}")
         except Exception as e:
-            pytest.fail(f"Unexpected error in test_login_response_schema: {e}\n{traceback.format_exc()}")
+            pytest.fail(f"Login schema validation failed: {e}")
