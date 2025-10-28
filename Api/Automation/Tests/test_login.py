@@ -1,22 +1,23 @@
 import json
 import time
 
+import allure
 import pytest
 import requests
 import re
 import threading
 import traceback
 from Api.Automation.Src.Config.config import Config
-from jsonschema import validate, ValidationError
 from Api.Automation.Src.Utils.print_api_utils import print_api_response
 from Api.Automation.Src.Utils.schema_validation_utils import validate_response_schema
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 class TestLoginAPI:
-    """Comprehensive Login API tests: positive, negative, edge, security, integration, performance."""
+    """Comprehensive Login API tests: positive, negative, edge cases."""
 
     # ---------- Positive Tests using utility ----------
+    @allure.severity(allure.severity_level.NORMAL)
     def test_login_success_token(self, auth_token):
         """Verify login succeeds and returns valid (header.payload.signature) JWT token from utility function."""
         try:
@@ -26,6 +27,7 @@ class TestLoginAPI:
             assert re.match(r"^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$", token), "Invalid JWT format"
         except Exception as e:
             pytest.fail(f"Unexpected error in test_login_success_token: {e}\n{traceback.format_exc()}")
+
 
     def test_token_allows_access_to_protected_endpoint(self, auth_token):
         """Token from utility function works for protected API."""
@@ -40,8 +42,8 @@ class TestLoginAPI:
             elif resp.status_code == 404:
                 print("\n No data found for this endpoint — valid 404 case.")
         except Exception as e:
-            pytest.fail(
-                f"Unexpected error in test_token_allows_access_to_protected_endpoint: {e}\n{traceback.format_exc()}")
+            pytest.fail(f"Unexpected error in test_token_allows_access_to_protected_endpoint: {e}\n{traceback.format_exc()}")
+
 
     # ---------- Negative / Validation ----------
     @pytest.mark.parametrize("email,password,role", [
@@ -50,6 +52,7 @@ class TestLoginAPI:
         (Config.WRONG_EMAIL, Config.WRONG_PASSWORD, Config.ADMIN_ROLE),
         (Config.ADMIN_EMAIL, Config.ADMIN_PASSWORD, Config.WRONG_ROLE),
     ])
+    @allure.severity(allure.severity_level.NORMAL)
     def test_login_invalid_credentials(self, email, password, role):
         """Invalid credentials or role returns proper error code."""
         try:
@@ -65,8 +68,8 @@ class TestLoginAPI:
             assert "error" in body or "message" in body, \
                 f"No error/message key found in response for {email}, {role}"
         except Exception as e:
-            pytest.fail(
-                f"Unexpected error in test_login_invalid_credentials ({email}, {role}): {e}\n{traceback.format_exc()}")
+            pytest.fail(f"Unexpected error in test_login_invalid_credentials ({email}, {role}): {e}\n{traceback.format_exc()}")
+
 
     @pytest.mark.parametrize("payload", [
         {"email": Config.ADMIN_EMAIL},  # missing password
@@ -74,6 +77,7 @@ class TestLoginAPI:
         {},  # empty
         {"email": None, "password": None},  # null values
     ])
+    @allure.severity(allure.severity_level.NORMAL)
     def test_login_missing_fields(self, payload):
         """Missing or null fields return validation error."""
         try:
@@ -84,8 +88,8 @@ class TestLoginAPI:
             assert resp.status_code in [400, 422], f"Expected 400/422, got {resp.status_code} for payload={payload}"
             assert "error" in body or "message" in body, f"No error/message key found in response for payload={payload}"
         except Exception as e:
-            pytest.fail(
-                f"Unexpected error in test_login_missing_fields (payload={payload}): {e}\n{traceback.format_exc()}")
+            pytest.fail(f"Unexpected error in test_login_missing_fields (payload={payload}): {e}\n{traceback.format_exc()}")
+
 
     def test_login_invalid_email_format(self):
         """Invalid email format rejected."""
@@ -103,6 +107,7 @@ class TestLoginAPI:
         except Exception as e:
             pytest.fail(f"Unexpected error in test_login_invalid_email_format: {e}\n{traceback.format_exc()}")
 
+
     def test_login_empty_body(self):
         """Empty raw body fails."""
         try:
@@ -118,6 +123,7 @@ class TestLoginAPI:
                 f"No error/message key found in response for payload={payload}"
         except Exception as e:
             pytest.fail(f"Unexpected error in test_login_empty_body: {e}\n{traceback.format_exc()}")
+
 
     def test_login_long_input(self):
         """Very long email/password handled gracefully."""
@@ -139,8 +145,10 @@ class TestLoginAPI:
         except Exception as e:
             pytest.fail(f"Unexpected error in test_login_long_input: {e}\n{traceback.format_exc()}")
 
+
     # ---------- HTTP Method Validation ----------
     @pytest.mark.parametrize("method", ["get", "put", "delete", "patch"])
+    @allure.severity(allure.severity_level.NORMAL)
     def test_login_invalid_methods(self, method):
         """Non-POST methods return 405."""
         try:
@@ -156,10 +164,11 @@ class TestLoginAPI:
                 assert "error" in body or "message" in body, \
                     f"No error/message key found in response for method={method}"
         except Exception as e:
-            pytest.fail(
-                f"Unexpected error in test_login_invalid_methods (method={method}): {e}\n{traceback.format_exc()}")
+            pytest.fail(f"Unexpected error in test_login_invalid_methods (method={method}): {e}\n{traceback.format_exc()}")
+
 
     # ---------- Performance / Concurrency ----------
+    @allure.severity(allure.severity_level.NORMAL)
     def test_parallel_logins_auto_timeout(self, num_users=50):
         """
         Simulate multiple parallel logins without manually setting a timeout.
@@ -199,14 +208,17 @@ class TestLoginAPI:
                         print(f"Login {idx}: {status} (Time taken: {duration:.2f} sec)")
                     except Exception as e:
                         # capture any worker exception
-                        pytest.fail(
-                            f"Worker raised exception in test_parallel_logins_auto_timeout: {e}\n{traceback.format_exc()}")
+                        pytest.fail(f"Worker raised exception in test_parallel_logins_auto_timeout: {e}\n{traceback.format_exc()}")
 
             total_time = time.time() - start_all
             print(f"\nTotal time for {num_users} users: {total_time:.2f} sec")
         except Exception as e:
             pytest.fail(f"Unexpected error in test_parallel_logins_auto_timeout: {e}\n{traceback.format_exc()}")
 
+
+    @allure.feature("Authentication")
+    @allure.story("Login")
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_login_response_schema(self):
         """Validate login endpoint response schema."""
         try:
@@ -219,9 +231,66 @@ class TestLoginAPI:
 
             resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
             body = print_api_response("Login Schema Validation", payload, resp)
-
+            
             assert resp.status_code in [200, 201], f"Expected 200/201, got {resp.status_code}"
             validate_response_schema(body, Config.LOGIN_SCHEMA, "Login Response")
-
+            
         except Exception as e:
             pytest.fail(f"Login schema validation failed: {e}")
+
+
+    @allure.severity(allure.severity_level.NORMAL)
+    def test_repeated_login_failures(self):
+        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
+        payload = {
+            "email": Config.ADMIN_EMAIL,
+            "password": "Wrong@password",
+            "role": Config.ADMIN_ROLE,
+        }
+        for i in range(15):
+            resp = requests.post(url, json=payload)
+        assert resp.status_code in [429, 403, 400], "API should block repeated login attempts"
+
+
+    @pytest.mark.parametrize("payload", [
+        {"email": "' OR 1=1 --", "password": Config.ADMIN_PASSWORD, "role": Config.ADMIN_ROLE},
+        {"email": "<script>alert('xss')</script>", "password": Config.ADMIN_PASSWORD, "role": Config.ADMIN_ROLE}
+    ])
+    @allure.severity(allure.severity_level.NORMAL)
+    def test_login_injection_protection(self, payload):
+        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
+        resp = requests.post(url, json=payload)
+        body = print_api_response("Malicious input test", payload, resp)
+        assert resp.status_code in [400, 422], "API should not allow injection inputs"
+
+
+    @allure.severity(allure.severity_level.NORMAL)
+    def test_protected_endpoint_invalid_token(self):
+        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["protected_endpoint"]
+        expired_token = "gsd3trfsxf3wefewesdgh32rtgerdfgfwertt345ethfdxf34wrety34ref345retrgfdgf"
+        headers = {**Config.HEADERS, "Authorization": f"Bearer {expired_token}"}
+        resp = requests.get(url, headers=headers, timeout=Config.REQUEST_TIMEOUT)
+        assert resp.status_code in [401, 403], "Should block invalid tokens"
+
+
+    @pytest.mark.parametrize("email", [
+        Config.ADMIN_EMAIL.title(),
+        Config.ADMIN_EMAIL.upper(),
+        Config.ADMIN_EMAIL.capitalize()
+    ])
+    @allure.severity(allure.severity_level.NORMAL)
+    def test_login_email_case_sensitivity(self, email):
+        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
+        payload = {"email": email, "password": Config.ADMIN_PASSWORD, "role": Config.ADMIN_ROLE}
+        resp = requests.post(url, json=payload)
+        assert resp.status_code not in [200, 201], "Login Should Passed"
+
+
+    @allure.severity(allure.severity_level.NORMAL)
+    def test_login_response_time(self):
+        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
+        payload = {"email": Config.ADMIN_EMAIL, "password": Config.ADMIN_PASSWORD, "role": Config.ADMIN_ROLE}
+        start = time.time()
+        resp = requests.post(url, json=payload) 
+        duration = time.time() - start
+        assert duration < 2.0, f"Response took too long: {duration:.2f}s"

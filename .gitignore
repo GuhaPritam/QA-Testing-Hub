@@ -32,3 +32,15 @@ Thumbs.db
 # Test / Generated Files
 report.html
 style.css
+
+# Allure Reports
+allure-results/
+allure-report/
+allure-history/
+allure-report.zip
+allure-results.zip
+*.json
+*.txt
+*.xml
+*.tmp
+allure*.properties
