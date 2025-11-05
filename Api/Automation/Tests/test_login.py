@@ -10,6 +10,7 @@ import traceback
 from Api.Automation.Src.Config.config import Config
 from Api.Automation.Src.Utils.print_api_utils import print_api_response
 from Api.Automation.Src.Utils.schema_validation_utils import validate_response_schema
+from Api.Automation.Src.Services.login_service import api_request, get_login_payload, build_url
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
@@ -29,12 +30,11 @@ class TestLoginAPI:
             pytest.fail(f"Unexpected error in test_login_success_token: {e}\n{traceback.format_exc()}")
 
 
-    def test_token_allows_access_to_protected_endpoint(self, auth_token):
+    def test_token_allows_access_to_protected_endpoint(self):
         """Token from utility function works for protected API."""
         try:
-            token = auth_token
-            url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["protected_endpoint"]
-            resp = requests.get(url, headers=Config.HEADERS, timeout=Config.REQUEST_TIMEOUT)
+            resp = api_request(method="get", endpoint_key="protected_endpoint", headers=Config.HEADERS)
+
             assert resp.status_code in [200, 404], f"Expected 200 or 404, got {resp.status_code}"
             if resp.status_code == 200:
                 body = resp.json()
@@ -56,10 +56,8 @@ class TestLoginAPI:
     def test_login_invalid_credentials(self, email, password, role):
         """Invalid credentials or role returns proper error code."""
         try:
-            url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-            payload = {"email": email, "password": password, "role": role}
-
-            resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
+            payload = get_login_payload(email=email, password=password, role=role)
+            resp = api_request(method="post", payload=payload)
             body = print_api_response("Testing invalid credentials", payload, resp)
 
             assert resp.status_code in [400], \
@@ -81,8 +79,7 @@ class TestLoginAPI:
     def test_login_missing_fields(self, payload):
         """Missing or null fields return validation error."""
         try:
-            url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-            resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
+            resp = api_request(method="post", payload=payload)
             body = print_api_response("Testing missing/null fields", payload, resp)
 
             assert resp.status_code in [400, 422], f"Expected 400/422, got {resp.status_code} for payload={payload}"
@@ -94,10 +91,8 @@ class TestLoginAPI:
     def test_login_invalid_email_format(self):
         """Invalid email format rejected."""
         try:
-            url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-            payload = {"email": "invalid_email", "password": "1234", "role": Config.ADMIN_ROLE}
-
-            resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
+            payload = get_login_payload(email="invalid_email", password="1234")
+            resp = api_request(method="post", payload=payload)
             body = print_api_response("Testing invalid email format", payload, resp)
 
             assert resp.status_code in [400, 422], \
@@ -111,9 +106,8 @@ class TestLoginAPI:
     def test_login_empty_body(self):
         """Empty raw body fails."""
         try:
-            url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
             payload = {}
-            resp = requests.post(url, data="", timeout=Config.REQUEST_TIMEOUT)
+            resp = api_request("post", "login", payload={})
             body = print_api_response("Testing empty body", payload, resp)
 
             # Assertions
@@ -128,13 +122,8 @@ class TestLoginAPI:
     def test_login_long_input(self):
         """Very long email/password handled gracefully."""
         try:
-            url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-            payload = {
-                "email": "a" * 10000 + "@example.com",
-                "password": "b" * 10000,
-                "role": Config.ADMIN_ROLE,
-            }
-            resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
+            payload = get_login_payload(email="a" * 10000 + "@example.com", password="b" * 10000)
+            resp = api_request(method="post", payload=payload)
             body = print_api_response("Testing very long input", payload, resp)
 
             # Assertions
@@ -152,8 +141,7 @@ class TestLoginAPI:
     def test_login_invalid_methods(self, method):
         """Non-POST methods return 405."""
         try:
-            url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-            resp = getattr(requests, method)(url, timeout=Config.REQUEST_TIMEOUT)
+            resp = api_request(method=method, payload=None)
             payload = {"method": method}
             body = print_api_response(f"Testing invalid HTTP method: {method.upper()}", payload, resp)
 
@@ -175,14 +163,8 @@ class TestLoginAPI:
         The function measures time taken for each request and total execution.
         """
         try:
-            url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-
-            payload = {
-                "email": Config.ADMIN_EMAIL,
-                "password": Config.ADMIN_PASSWORD,
-                "role": Config.ADMIN_ROLE
-            }
-
+            url = build_url()
+            payload = get_login_payload()
             results = []
 
             def do_login(index):
@@ -222,14 +204,8 @@ class TestLoginAPI:
     def test_login_response_schema(self):
         """Validate login endpoint response schema."""
         try:
-            url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-            payload = {
-                "email": Config.ADMIN_EMAIL,
-                "password": Config.ADMIN_PASSWORD,
-                "role": Config.ADMIN_ROLE
-            }
-
-            resp = requests.post(url, json=payload, timeout=Config.REQUEST_TIMEOUT)
+            payload = get_login_payload()
+            resp = api_request(method="post", payload=payload)
             body = print_api_response("Login Schema Validation", payload, resp)
             
             assert resp.status_code in [200, 201], f"Expected 200/201, got {resp.status_code}"
@@ -241,12 +217,9 @@ class TestLoginAPI:
 
     @allure.severity(allure.severity_level.NORMAL)
     def test_repeated_login_failures(self):
-        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-        payload = {
-            "email": Config.ADMIN_EMAIL,
-            "password": "Wrong@password",
-            "role": Config.ADMIN_ROLE,
-        }
+        url = build_url()
+        payload = get_login_payload(password="Wrong@password")
+
         for i in range(15):
             resp = requests.post(url, json=payload)
         assert resp.status_code in [429, 403, 400], "API should block repeated login attempts"
@@ -258,18 +231,16 @@ class TestLoginAPI:
     ])
     @allure.severity(allure.severity_level.NORMAL)
     def test_login_injection_protection(self, payload):
-        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-        resp = requests.post(url, json=payload)
+        resp = api_request(method="post", payload=payload)
         body = print_api_response("Malicious input test", payload, resp)
-        assert resp.status_code in [400, 422], "API should not allow injection inputs"
+        assert resp.status_code in [400, 422], f"API should not allow injection inputs, got {resp.status_code} with body={body}"
 
 
     @allure.severity(allure.severity_level.NORMAL)
     def test_protected_endpoint_invalid_token(self):
-        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["protected_endpoint"]
         expired_token = "gsd3trfsxf3wefewesdgh32rtgerdfgfwertt345ethfdxf34wrety34ref345retrgfdgf"
         headers = {**Config.HEADERS, "Authorization": f"Bearer {expired_token}"}
-        resp = requests.get(url, headers=headers, timeout=Config.REQUEST_TIMEOUT)
+        resp = api_request(method="get", endpoint_key="protected_endpoint", headers=headers)
         assert resp.status_code in [401, 403], "Should block invalid tokens"
 
 
@@ -280,17 +251,16 @@ class TestLoginAPI:
     ])
     @allure.severity(allure.severity_level.NORMAL)
     def test_login_email_case_sensitivity(self, email):
-        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-        payload = {"email": email, "password": Config.ADMIN_PASSWORD, "role": Config.ADMIN_ROLE}
-        resp = requests.post(url, json=payload)
+        payload = get_login_payload(email=email)
+        resp = api_request(method="post", payload=payload)
         assert resp.status_code not in [200, 201], "Login Should Passed"
 
 
     @allure.severity(allure.severity_level.NORMAL)
     def test_login_response_time(self):
-        url = Config.BASE_URL.rstrip("/") + Config.ENDPOINTS["login"]
-        payload = {"email": Config.ADMIN_EMAIL, "password": Config.ADMIN_PASSWORD, "role": Config.ADMIN_ROLE}
+        payload = get_login_payload()
         start = time.time()
-        resp = requests.post(url, json=payload) 
+        resp = api_request(method="post", endpoint_key="login", payload=payload) 
         duration = time.time() - start
+        print_api_response("Login Response Time Test", payload, resp)
         assert duration < 2.0, f"Response took too long: {duration:.2f}s"
